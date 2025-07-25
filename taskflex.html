@@ -5,12 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskFlex - Minhas Tarefas</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Estilos para as novas funcionalidades -->
+    <style>
+        .quote-container {
+            text-align: center;
+            margin: -15px 0 25px 0;
+            padding: 10px;
+            background-color: #eef2f7;
+            border-radius: 8px;
+            font-style: italic;
+            color: #555;
+            border: 1px solid #dce0e1;
+        }
+        .zen-mode-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5em;
+            margin-left: 15px;
+            vertical-align: middle;
+            color: #fff;
+            transition: transform 0.3s ease;
+        }
+        .zen-mode-btn:hover {
+            transform: scale(1.2);
+        }
+        /* Estilos do Modo Zen */
+        body.zen-mode header,
+        body.zen-mode footer,
+        body.zen-mode .task-controls,
+        body.zen-mode h2,
+        body.zen-mode .quote-container {
+            display: none !important;
+        }
+        body.zen-mode {
+            background-color: #d8e2dc;
+        }
+        body.zen-mode main {
+            padding-top: 5vh;
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="container">
             <h1>TaskFlex</h1>
-            <span id="logged-in-user" class="logged-in-user"></span>
+            <div>
+                <span id="logged-in-user" class="logged-in-user"></span>
+                <!-- Botão Surpresa 1: Modo Zen -->
+                <button id="zen-mode-toggle" class="zen-mode-btn" title="Modo Zen">🧘</button>
+            </div>
             <nav>
                 <ul>
                     <li><a href="#" id="nav-my-tasks" class="active">Minhas Tarefas</a></li>
@@ -25,6 +69,8 @@
         <section id="my-tasks" class="tasks-section">
             <div class="container">
                 <h2>Minhas Tarefas</h2>
+                <!-- Container Surpresa 2: Frase Motivacional -->
+                <div id="quote-container" class="quote-container"></div>
                 <div class="task-controls">
                     <button id="btn-new-task" class="btn">Nova Tarefa</button>
                     <div class="filters">
@@ -70,10 +116,22 @@
             </div>
         </section>
 
+        <!-- Secção "Sobre" Atualizada -->
         <section id="about-taskflex" class="about-section hidden">
             <div class="container">
                 <h2>Sobre o TaskFlex</h2>
-                <p>Esta é a sua aplicação de gestão de tarefas, agora totalmente funcional com um back-end em Python e uma base de dados persistente!</p>
+                <h3>Sua Solução Definitiva para Gerenciamento de Tarefas</h3>
+                <p>O TaskFlex é um site/aplicativo de gerenciamento de tarefas que permite ao usuário organizar atividades diárias, definir prazos e acompanhar o progresso de maneira visual e intuitiva.</p>
+
+                <h3>Problema que Resolvemos</h3>
+                <p>Muitas pessoas se perdem nas suas obrigações diárias por não terem uma forma simples e eficiente de organizar suas tarefas, o que gera estresse, baixa produtividade e esquecimento de compromissos importantes.</p>
+
+                <h3>Por que o TaskFlex é Bom e Necessário?</h3>
+                <ul>
+                    <li><strong>Impacto Social:</strong> Aumenta a organização pessoal e o bem-estar dos usuários, reduzindo o estresse e promovendo uma rotina mais equilibrada.</li>
+                    <li><strong>Impacto Econômico:</strong> Ajuda profissionais a ganharem produtividade, evitando retrabalho e otimizando o tempo, o que se traduz em maior eficiência e resultados.</li>
+                    <li><strong>Impacto Ambiental:</strong> Reduz o uso de papel com anotações físicas, promovendo um planejamento digital e sustentável.</li>
+                </ul>
             </div>
         </section>
 
@@ -114,8 +172,9 @@
         const aboutSectionEl = document.getElementById('about-taskflex');
         const taskFormEl = document.getElementById('task-form');
         const calendarSectionEl = document.getElementById('calendar-section');
+        const quoteContainerEl = document.getElementById('quote-container');
 
-        let allTasks = []; // Armazena todas as tarefas para filtrar localmente
+        let allTasks = [];
 
         // --- Lógica de Autenticação e Carregamento Inicial ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -129,8 +188,9 @@
             }
 
             loggedInUserEl.textContent = `Olá, ${username}!`;
-            loggedInUserEl.style.display = 'block';
+            loggedInUserEl.style.display = 'inline-block';
             loadTasks(userId);
+            showMotivationalQuote();
         });
 
         // --- Funções de Navegação ---
@@ -161,7 +221,16 @@
             try {
                 const response = await fetch(`${API_URL}/api/users/${userId}/tasks`);
                 allTasks = await response.json();
-                renderTaskList(allTasks); // Renderiza todas as tarefas inicialmente
+                
+                // **NOVO: Ordenar tarefas por prioridade**
+                const priorityMap = { 'high': 3, 'medium': 2, 'low': 1 };
+                allTasks.sort((a, b) => {
+                    const priorityA = priorityMap[a.priority] || 0;
+                    const priorityB = priorityMap[b.priority] || 0;
+                    return priorityB - priorityA;
+                });
+
+                renderTaskList(allTasks);
             } catch (error) {
                 console.error('Erro ao carregar tarefas:', error);
                 alert('Não foi possível carregar as tarefas.');
@@ -230,8 +299,7 @@
             if (!confirm('Tem a certeza que deseja excluir esta tarefa?')) return;
             try {
                 await fetch(`${API_URL}/api/tasks/${taskId}`, { method: 'DELETE' });
-                allTasks = allTasks.filter(t => t.id !== taskId);
-                renderTaskList(allTasks);
+                await loadTasks(localStorage.getItem('userId'));
             } catch (error) {
                 console.error('Erro ao excluir tarefa:', error);
                 alert('Não foi possível excluir a tarefa.');
@@ -250,15 +318,12 @@
 
         async function toggleTaskCompletion(taskId, isCompleted) {
              try {
-                const response = await fetch(`${API_URL}/api/tasks/${taskId}`, {
+                await fetch(`${API_URL}/api/tasks/${taskId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ completed: isCompleted })
                 });
-                const updatedTask = await response.json();
-                const taskIndex = allTasks.findIndex(t => t.id === taskId);
-                allTasks[taskIndex] = updatedTask;
-                renderTaskList(allTasks);
+                await loadTasks(localStorage.getItem('userId'));
             } catch (error) {
                 console.error('Erro ao atualizar tarefa:', error);
                 alert('Não foi possível atualizar o estado da tarefa.');
@@ -326,8 +391,27 @@
             showSection(calendarSectionEl);
             renderCalendar();
         });
-        
         document.getElementById('btn-close-calendar').addEventListener('click', () => showSection(myTasksSectionEl));
+
+        // --- Funções Surpresa ---
+
+        // 1. Frase Motivacional
+        function showMotivationalQuote() {
+            const quotes = [
+                "O segredo para progredir é começar.",
+                "Acredite que você pode, assim você já está no meio do caminho.",
+                "A persistência realiza o impossível.",
+                "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+                "Comece onde você está. Use o que você tem. Faça o que você pode."
+            ];A
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            quoteContainerEl.textContent = `"${quotes[randomIndex]}"`;
+        }
+
+        // 2. Modo Zen
+        document.getElementById('zen-mode-toggle').addEventListener('click', () => {
+            document.body.classList.toggle('zen-mode');
+        });
 
     </script>
 </body>
