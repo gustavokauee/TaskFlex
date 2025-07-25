@@ -13,7 +13,6 @@
             <span id="logged-in-user" class="logged-in-user"></span>
             <nav>
                 <ul>
-                    <!-- Os links de navegação podem ser simplificados ou mantidos -->
                     <li><a href="#" id="nav-my-tasks" class="active">Minhas Tarefas</a></li>
                     <li><a href="#" id="nav-about">Sobre o TaskFlex</a></li>
                     <li><a href="index.html" id="logout-btn" class="btn btn-sm">Sair</a></li>
@@ -28,9 +27,12 @@
                 <h2>Minhas Tarefas</h2>
                 <div class="task-controls">
                     <button id="btn-new-task" class="btn">Nova Tarefa</button>
-                    <!-- Filtros podem ser implementados no futuro -->
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">Todas</button>
+                        <button class="filter-btn" data-filter="pending">Pendentes</button>
+                        <button class="filter-btn" data-filter="completed">Concluídas</button>
+                    </div>
                 </div>
-                <!-- A lista de tarefas será preenchida dinamicamente pelo JavaScript -->
                 <ul id="task-list" class="task-list"></ul>
             </div>
         </section>
@@ -39,7 +41,6 @@
             <div class="container">
                 <h2 id="form-title">Nova Tarefa</h2>
                 <form id="task-form">
-                    <!-- Campo escondido para guardar o ID da tarefa durante a edição -->
                     <input type="hidden" id="task-id">
                     <div class="form-group">
                         <label for="task-title">Título:</label>
@@ -75,126 +76,125 @@
                 <p>Esta é a sua aplicação de gestão de tarefas, agora totalmente funcional com um back-end em Python e uma base de dados persistente!</p>
             </div>
         </section>
+
+        <section id="calendar-section" class="calendar-section hidden">
+            <div class="container">
+                <h2>Calendário</h2>
+                <div class="calendar-header">
+                    <button id="prev-month-btn" class="btn secondary">&lt;</button>
+                    <h3 id="current-month-year"></h3>
+                    <button id="next-month-btn" class="btn secondary">&gt;</button>
+                </div>
+                <div class="calendar-grid-container">
+                    <div class="calendar-weekdays">
+                        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                    </div>
+                    <div id="calendar-days" class="calendar-days"></div>
+                </div>
+                <button id="btn-close-calendar" class="btn secondary full-width">Fechar Calendário</button>
+            </div>
+        </section>
     </main>
 
     <footer>
         <div class="container">
+            <button class="btn footer-btn" id="btn-show-calendar">Ver calendário</button>
             <p>&copy; 2025 TaskFlex. Todos os direitos reservados.</p>
         </div>
     </footer>
 
     <script>
-        // URL base da sua API no Render
         const API_URL = 'https://taskflex.onrender.com';
 
         // Elementos da página
-        const taskList = document.getElementById('task-list');
-        const loggedInUserElement = document.getElementById('logged-in-user');
-        const taskFormSection = document.getElementById('new-task-form-section');
-        const myTasksSection = document.getElementById('my-tasks');
-        const aboutSection = document.getElementById('about-taskflex');
-        const taskForm = document.getElementById('task-form');
-        
+        const taskListEl = document.getElementById('task-list');
+        const loggedInUserEl = document.getElementById('logged-in-user');
+        const taskFormSectionEl = document.getElementById('new-task-form-section');
+        const myTasksSectionEl = document.getElementById('my-tasks');
+        const aboutSectionEl = document.getElementById('about-taskflex');
+        const taskFormEl = document.getElementById('task-form');
+        const calendarSectionEl = document.getElementById('calendar-section');
+
+        let allTasks = []; // Armazena todas as tarefas para filtrar localmente
+
         // --- Lógica de Autenticação e Carregamento Inicial ---
         document.addEventListener('DOMContentLoaded', () => {
             const userId = localStorage.getItem('userId');
             const username = localStorage.getItem('username');
 
             if (!userId || !username) {
-                // Se não houver dados do utilizador, volta para a página de login
                 alert('Sessão inválida. Por favor, faça login novamente.');
                 window.location.href = 'index.html';
                 return;
             }
 
-            // Exibe o nome do utilizador
-            loggedInUserElement.textContent = `Olá, ${username}!`;
-            loggedInUserElement.style.display = 'block';
-
-            // Carrega as tarefas do utilizador
+            loggedInUserEl.textContent = `Olá, ${username}!`;
+            loggedInUserEl.style.display = 'block';
             loadTasks(userId);
         });
 
         // --- Funções de Navegação ---
-        document.getElementById('nav-my-tasks').addEventListener('click', (e) => {
-            e.preventDefault();
-            myTasksSection.classList.remove('hidden');
-            aboutSection.classList.add('hidden');
-            taskFormSection.classList.add('hidden');
-        });
+        function showSection(sectionToShow) {
+            [myTasksSectionEl, aboutSectionEl, taskFormSectionEl, calendarSectionEl].forEach(section => {
+                section.classList.add('hidden');
+            });
+            sectionToShow.classList.remove('hidden');
+        }
 
-        document.getElementById('nav-about').addEventListener('click', (e) => {
-            e.preventDefault();
-            myTasksSection.classList.add('hidden');
-            aboutSection.classList.remove('hidden');
-            taskFormSection.classList.add('hidden');
-        });
-
+        document.getElementById('nav-my-tasks').addEventListener('click', (e) => { e.preventDefault(); showSection(myTasksSectionEl); });
+        document.getElementById('nav-about').addEventListener('click', (e) => { e.preventDefault(); showSection(aboutSectionEl); });
         document.getElementById('btn-new-task').addEventListener('click', () => {
-            taskForm.reset();
+            taskFormEl.reset();
             document.getElementById('task-id').value = '';
             document.getElementById('form-title').textContent = 'Nova Tarefa';
-            taskFormSection.classList.remove('hidden');
-            myTasksSection.classList.add('hidden');
+            showSection(taskFormSectionEl);
         });
-
-        document.getElementById('btn-cancel-task').addEventListener('click', () => {
-            taskFormSection.classList.add('hidden');
-            myTasksSection.classList.remove('hidden');
-        });
-
+        document.getElementById('btn-cancel-task').addEventListener('click', () => showSection(myTasksSectionEl));
         document.getElementById('logout-btn').addEventListener('click', () => {
             localStorage.removeItem('userId');
             localStorage.removeItem('username');
-            // Não é necessário preventDefault, pois o link já aponta para index.html
         });
 
-        // --- Funções de Comunicação com a API ---
+        // --- Lógica de Tarefas (API) ---
 
-        // Carregar tarefas do utilizador
         async function loadTasks(userId) {
             try {
                 const response = await fetch(`${API_URL}/api/users/${userId}/tasks`);
-                const tasks = await response.json();
-                
-                taskList.innerHTML = ''; // Limpa a lista antes de adicionar as novas tarefas
-                tasks.forEach(task => renderTask(task));
+                allTasks = await response.json();
+                renderTaskList(allTasks); // Renderiza todas as tarefas inicialmente
             } catch (error) {
                 console.error('Erro ao carregar tarefas:', error);
                 alert('Não foi possível carregar as tarefas.');
             }
         }
 
-        // Renderizar uma única tarefa na lista
-        function renderTask(task) {
-            const item = document.createElement('li');
-            item.classList.add('task-item');
-            if (task.completed) {
-                item.classList.add('completed');
-            }
-            item.dataset.id = task.id;
+        function renderTaskList(tasksToRender) {
+            taskListEl.innerHTML = '';
+            tasksToRender.forEach(task => {
+                const item = document.createElement('li');
+                item.className = `task-item ${task.completed ? 'completed' : 'pending'}`;
+                item.dataset.id = task.id;
 
-            const formattedDate = task.dueDate ? new Date(task.dueDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Sem prazo';
+                const formattedDate = task.dueDate ? new Date(task.dueDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Sem prazo';
 
-            item.innerHTML = `
-                <input type="checkbox" ${task.completed ? 'checked' : ''}>
-                <label>${task.title} – Prazo: ${formattedDate}</label>
-                <div class="task-actions">
-                    <button class="edit-task-btn">Editar</button>
-                    <button class="delete-task-btn">Excluir</button>
-                </div>
-            `;
-            
-            // Adicionar eventos aos novos elementos
-            item.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleTaskCompletion(task.id, e.target.checked));
-            item.querySelector('.edit-task-btn').addEventListener('click', () => handleEdit(task));
-            item.querySelector('.delete-task-btn').addEventListener('click', () => deleteTask(task.id));
+                item.innerHTML = `
+                    <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                    <label>${task.title} – Prazo: ${formattedDate}</label>
+                    <div class="task-actions">
+                        <button class="edit-task-btn">Editar</button>
+                        <button class="delete-task-btn">Excluir</button>
+                    </div>
+                `;
+                
+                item.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleTaskCompletion(task.id, e.target.checked));
+                item.querySelector('.edit-task-btn').addEventListener('click', () => handleEdit(task));
+                item.querySelector('.delete-task-btn').addEventListener('click', () => deleteTask(task.id));
 
-            taskList.appendChild(item);
+                taskListEl.appendChild(item);
+            });
         }
 
-        // Lidar com o envio do formulário (Criar ou Editar)
-        taskForm.addEventListener('submit', async (event) => {
+        taskFormEl.addEventListener('submit', async (event) => {
             event.preventDefault();
             const userId = localStorage.getItem('userId');
             const taskId = document.getElementById('task-id').value;
@@ -207,14 +207,8 @@
                 userId: parseInt(userId)
             };
 
-            let url = `${API_URL}/api/tasks`;
-            let method = 'POST';
-
-            if (taskId) {
-                // Se há um ID, é uma edição (PUT)
-                url = `${API_URL}/api/tasks/${taskId}`;
-                method = 'PUT';
-            }
+            const url = taskId ? `${API_URL}/api/tasks/${taskId}` : `${API_URL}/api/tasks`;
+            const method = taskId ? 'PUT' : 'POST';
 
             try {
                 const response = await fetch(url, {
@@ -222,36 +216,30 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(taskData)
                 });
-
                 if (!response.ok) throw new Error('Falha ao salvar a tarefa.');
                 
-                loadTasks(userId); // Recarrega a lista de tarefas
-                taskFormSection.classList.add('hidden');
-                myTasksSection.classList.remove('hidden');
+                await loadTasks(userId);
+                showSection(myTasksSectionEl);
             } catch (error) {
                 console.error('Erro ao salvar tarefa:', error);
                 alert('Não foi possível salvar a tarefa.');
             }
         });
 
-        // Apagar uma tarefa
         async function deleteTask(taskId) {
             if (!confirm('Tem a certeza que deseja excluir esta tarefa?')) return;
-
             try {
                 await fetch(`${API_URL}/api/tasks/${taskId}`, { method: 'DELETE' });
-                document.querySelector(`[data-id='${taskId}']`).remove();
+                allTasks = allTasks.filter(t => t.id !== taskId);
+                renderTaskList(allTasks);
             } catch (error) {
                 console.error('Erro ao excluir tarefa:', error);
                 alert('Não foi possível excluir a tarefa.');
             }
         }
         
-        // Preencher o formulário para edição
         function handleEdit(task) {
-            taskFormSection.classList.remove('hidden');
-            myTasksSection.classList.add('hidden');
-            
+            showSection(taskFormSectionEl);
             document.getElementById('form-title').textContent = 'Editar Tarefa';
             document.getElementById('task-id').value = task.id;
             document.getElementById('task-title').value = task.title;
@@ -260,20 +248,87 @@
             document.getElementById('priority').value = task.priority;
         }
 
-        // Marcar tarefa como concluída/pendente
         async function toggleTaskCompletion(taskId, isCompleted) {
              try {
-                await fetch(`${API_URL}/api/tasks/${taskId}`, {
+                const response = await fetch(`${API_URL}/api/tasks/${taskId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ completed: isCompleted })
                 });
-                loadTasks(localStorage.getItem('userId')); // Recarrega para mostrar o estilo
+                const updatedTask = await response.json();
+                const taskIndex = allTasks.findIndex(t => t.id === taskId);
+                allTasks[taskIndex] = updatedTask;
+                renderTaskList(allTasks);
             } catch (error) {
                 console.error('Erro ao atualizar tarefa:', error);
                 alert('Não foi possível atualizar o estado da tarefa.');
             }
         }
+
+        // --- Lógica dos Filtros ---
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.dataset.filter;
+                let filteredTasks = allTasks;
+                if (filter === 'pending') {
+                    filteredTasks = allTasks.filter(task => !task.completed);
+                } else if (filter === 'completed') {
+                    filteredTasks = allTasks.filter(task => task.completed);
+                }
+                renderTaskList(filteredTasks);
+            });
+        });
+
+        // --- Lógica do Calendário ---
+        const currentMonthYearEl = document.getElementById('current-month-year');
+        const calendarDaysEl = document.getElementById('calendar-days');
+        let currentDate = new Date();
+
+        function renderCalendar() {
+            calendarDaysEl.innerHTML = '';
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            currentMonthYearEl.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+            const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const daysInMonth = lastDayOfMonth.getDate();
+            const startDay = firstDayOfMonth.getDay();
+
+            for (let i = 0; i < startDay; i++) {
+                calendarDaysEl.innerHTML += `<div class="calendar-day empty"></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.classList.add('calendar-day');
+                dayDiv.textContent = day;
+                const today = new Date();
+                if (currentDate.getFullYear() === today.getFullYear() && currentDate.getMonth() === today.getMonth() && day === today.getDate()) {
+                    dayDiv.classList.add('today');
+                }
+                calendarDaysEl.appendChild(dayDiv);
+            }
+        }
+
+        document.getElementById('prev-month-btn').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('next-month-btn').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        document.getElementById('btn-show-calendar').addEventListener('click', () => {
+            showSection(calendarSectionEl);
+            renderCalendar();
+        });
+        
+        document.getElementById('btn-close-calendar').addEventListener('click', () => showSection(myTasksSectionEl));
+
     </script>
 </body>
 </html>
