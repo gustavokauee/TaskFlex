@@ -49,7 +49,13 @@
                 },
                 body: JSON.stringify(dadosLogin)
             })
-            .then(response => response.json())
+            .then(response => {
+                // Se a resposta não for OK (ex: erro 500), lança um erro para o .catch
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.message || 'Credenciais inválidas') });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.userId) { // A API retorna userId em caso de sucesso
                     mensagemDiv.style.color = 'green';
@@ -60,9 +66,9 @@
                     localStorage.setItem('username', data.username);
 
                     // Redireciona para a página de tarefas após 1.5 segundos
-                    setTimeoaut(() => {
-                        // Passamos o nome de usuário na URL, como no seu código original
-                        window.location.href = `taskflex.html?username=${data.username}`;
+                    // *** AQUI ESTÁ A CORREÇÃO ***
+                    setTimeout(() => {
+                        window.location.href = `taskflex.html`;
                     }, 1500);
 
                 } else {
@@ -74,7 +80,7 @@
             .catch(error => {
                 console.error('Erro na requisição:', error);
                 mensagemDiv.style.color = 'red';
-                mensagemDiv.textContent = 'Não foi possível conectar ao servidor.';
+                mensagemDiv.textContent = error.message || 'Não foi possível conectar ao servidor.';
             });
         });
     </script>
