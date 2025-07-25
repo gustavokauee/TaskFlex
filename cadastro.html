@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+v<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -38,59 +38,39 @@
         const mensagemDiv = document.getElementById('mensagem');
 
         cadastroForm.addEventListener('submit', function(event) {
-            event.preventDefault();
+            // Impede o envio padrão do formulário, evitando que a página recarregue
+            event.preventDefault(); 
 
+            // Captura os valores digitados nos campos do formulário
             const username = document.getElementById('new-username').value;
             const email = document.getElementById('new-email').value;
             const password = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
 
+            // Validação simples: verifica se as duas senhas digitadas são iguais
             if (password !== confirmPassword) {
-                mensagemDiv.style.color = 'red';
-                mensagemDiv.textContent = 'As senhas não coincidem!';
-                return;
+                mensagemDiv.style.color = 'red'; // Define a cor do texto para vermelho
+                mensagemDiv.textContent = 'As senhas não coincidem!'; // Exibe a mensagem de erro
+                return; // Interrompe a função, impedindo o "cadastro"
             }
 
-            const dadosUsuario = {
-                username: username,
-                email: email,
-                password: password
-            };
+            // --- ATENÇÃO: ESTE É APENAS UM CÓDIGO DE SIMULAÇÃO ---
+            // Como não há um backend (servidor/banco de dados) conectado agora,
+            // os dados do cadastro NÃO SÃO SALVOS.
+            // Apenas exibimos uma mensagem de sucesso para a interface do usuário.
+            mensagemDiv.style.color = 'green'; // Define a cor do texto para verde
+            mensagemDiv.textContent = 'Cadastro "realizado" com sucesso! (Dados não salvos ainda)';
+            
+            // Limpa todos os campos do formulário após a "submissão" simulada
+            cadastroForm.reset(); 
 
-            // *** MUDANÇA AQUI: URL do seu script PHP ***
-            // Assumimos que 'processa_cadastro.php' estará na mesma pasta do seu HTML,
-            // dentro de uma subpasta no htdocs do XAMPP (ex: htdocs/taskflex/processa_cadastro.php)
-            fetch('processa_cadastro.php', { // ou 'http://localhost/sua_pasta/processa_cadastro.php'
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json' // É importante manter este cabeçalho!
-                },
-                body: JSON.stringify(dadosUsuario)
-            })
-            .then(response => {
-                // PHP vai responder com JSON, então parseamos como JSON
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.mensagem || 'Erro desconhecido no servidor PHP'); });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.sucesso) {
-                    mensagemDiv.style.color = 'green';
-                    mensagemDiv.textContent = data.mensagem || 'Cadastro realizado com sucesso!';
-                    cadastroForm.reset();
-                    // Opcional: Redirecionar para a página de login ou dashboard
-                    // window.location.href = 'login.html';
-                } else {
-                    mensagemDiv.style.color = 'red';
-                    mensagemDiv.textContent = data.mensagem || 'Erro ao cadastrar. Tente novamente.';
-                }
-            })
-            .catch(error => {
-                console.error('Erro na requisição:', error);
-                mensagemDiv.style.color = 'red';
-                mensagemDiv.textContent = 'Erro de conexão ou no servidor: ' + error.message;
-            });
+            // Opcional: Redirecionar o usuário para a página de login após alguns segundos.
+            // Descomente as linhas abaixo se quiser essa funcionalidade.
+            /*
+            setTimeout(() => {
+                window.location.href = 'index.html'; // Redireciona para a página de login
+            }, 3000); // O redirecionamento ocorrerá após 3 segundos
+            */
         });
     </script>
 </body>
