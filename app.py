@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+import click # Adicionado para criar comandos
 
 # --- Configuração Inicial ---
 
@@ -15,7 +16,7 @@ CORS(app)
 # Configura o caminho do banco de dados.
 # Ele usa a variável de ambiente DATABASE_URL se estiver no Render,
 # ou cria um arquivo local 'taskflex.db' se estiver rodando no seu computador.
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///taskflex.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///taskflex.db').replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicializa a extensão do banco de dados
@@ -29,7 +30,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
 
     def set_password(self, password):
         """Cria um hash seguro para a senha."""
@@ -98,7 +99,6 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     if user and user.check_password(password):
-        # Em uma aplicação real, aqui você geraria um token (JWT)
         return jsonify({'message': 'Login bem-sucedido', 'userId': user.id, 'username': user.username}), 200
     
     return jsonify({'message': 'Credenciais inválidas'}), 401
@@ -118,7 +118,6 @@ def get_user_tasks(user_id):
 def add_task():
     data = request.get_json()
     
-    # Validação dos dados recebidos
     if not data or 'title' not in data or 'userId' not in data:
         return jsonify({'message': 'Dados incompletos'}), 400
 
@@ -166,12 +165,14 @@ def delete_task(task_id):
     return jsonify({'message': 'Tarefa deletada com sucesso'}), 200
 
 
-# --- Inicialização do Servidor ---
+# --- Comandos Especiais para o Servidor ---
 
-# Este bloco é executado apenas quando você roda o script diretamente (python app.py)
+@app.cli.command("init-db")
+def init_db_command():
+    """Limpa os dados existentes e cria novas tabelas."""
+    db.create_all()
+    click.echo("Base de dados inicializada.")
+
+# O bloco abaixo não é mais necessário para o deploy, mas é bom para testes locais.
 if __name__ == '__main__':
-    # Cria as tabelas no banco de dados se elas não existirem
-    with app.app_context():
-        db.create_all()
-    # Inicia o servidor de desenvolvimento do Flask
     app.run(debug=True)
