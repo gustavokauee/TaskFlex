@@ -94,7 +94,6 @@
             <nav>
                 <ul>
                     <li><a href="#" id="nav-my-tasks" class="active">Minhas Tarefas</a></li>
-                    <!-- NOVO: Aba de Calendário adicionada -->
                     <li><a href="#" id="nav-calendar">Calendário</a></li>
                     <li><a href="#" id="nav-dashboard">Meu Desempenho</a></li>
                     <li><a href="#" id="nav-about">Sobre</a></li>
@@ -126,12 +125,33 @@
         </section>
 
         <section id="new-task-form-section" class="new-task-section hidden"></section>
-
         <section id="about-taskflex" class="about-section hidden"></section>
+        
+        <!-- CORREÇÃO: Conteúdo do dashboard restaurado no HTML principal -->
+        <section id="dashboard-section" class="hidden">
+            <div class="container">
+                <h2>Meu Desempenho</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h4>Total de Tarefas</h4>
+                        <p id="stat-total">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Concluídas</h4>
+                        <p id="stat-completed">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Pendentes</h4>
+                        <p id="stat-pending">0</p>
+                    </div>
+                </div>
+                <h4>Progresso Geral</h4>
+                <div class="progress-bar-container">
+                    <div id="progress-bar" class="progress-bar">0%</div>
+                </div>
+            </div>
+        </section>
 
-        <section id="dashboard-section" class="hidden"></section>
-
-        <!-- NOVO: Secção do Calendário adicionada de volta -->
         <section id="calendar-section" class="calendar-section hidden">
             <div class="container">
                 <h2>Calendário</h2>
@@ -200,7 +220,6 @@
             const focusTask = focusTaskId ? allTasks.find(t => t.id == focusTaskId) : null;
             const regularTasks = focusTask ? allTasks.filter(t => t.id != focusTaskId) : allTasks;
             
-            // Aplica o filtro ativo atualmente
             const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
             applyFilter(activeFilter, regularTasks);
             
@@ -281,12 +300,11 @@
         async function deleteTask(taskId) {
             if (!confirm('Tem a certeza que deseja excluir esta tarefa?')) return;
             try {
-                // CORREÇÃO: Verifica se a tarefa a ser excluída é o foco
                 if (localStorage.getItem('focusTaskId') == taskId) {
                     localStorage.removeItem('focusTaskId');
                 }
                 await fetch(`${API_URL}/api/tasks/${taskId}`, { method: 'DELETE' });
-                await loadTasks(localStorage.getItem('userId')); // Recarrega tudo para atualizar a UI
+                await loadTasks(localStorage.getItem('userId'));
             } catch (error) {
                 alert('Não foi possível excluir a tarefa.');
             }
@@ -346,7 +364,6 @@
             document.getElementById('quote-container').textContent = `"${quotes[randomIndex]}"`;
         }
         
-        // CORREÇÃO: Função para aplicar filtros
         function applyFilter(filter, tasks) {
             let filteredTasks = tasks;
             if (filter === 'pending') {
@@ -357,11 +374,10 @@
             renderTaskList(filteredTasks, document.getElementById('task-list'));
         }
 
-        // --- Lógica de Navegação e Conteúdo Dinâmico ---
         function showSection(sectionToShow) {
             [document.getElementById('my-tasks'), document.getElementById('about-taskflex'), 
              document.getElementById('new-task-form-section'), document.getElementById('dashboard-section'),
-             document.getElementById('calendar-section') // Adicionado
+             document.getElementById('calendar-section')
             ].forEach(section => section.classList.add('hidden'));
             sectionToShow.classList.remove('hidden');
         }
@@ -395,7 +411,6 @@
                     </ul>
                 </div>`;
 
-            // Adiciona os event listeners aos elementos recém-criados e existentes
             document.getElementById('task-form').addEventListener('submit', submitTaskForm);
             document.getElementById('btn-cancel-task').addEventListener('click', () => showSection(document.getElementById('my-tasks')));
             document.getElementById('nav-my-tasks').addEventListener('click', (e) => { e.preventDefault(); showSection(document.getElementById('my-tasks')); });
@@ -408,7 +423,6 @@
                 showSection(document.getElementById('new-task-form-section'));
             });
 
-            // CORREÇÃO: Adiciona listeners para os botões de filtro
             document.querySelectorAll('.filter-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -419,7 +433,6 @@
                 });
             });
 
-            // NOVO: Adiciona listeners para o calendário
             let currentDate = new Date();
             const currentMonthYearEl = document.getElementById('current-month-year');
             const calendarDaysEl = document.getElementById('calendar-days');
