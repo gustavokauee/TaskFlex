@@ -1,4 +1,4 @@
-v<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +10,7 @@ v<!DOCTYPE html>
     <div class="login-container">
         <h2>Criar sua Conta TaskFlex</h2>
         <p>Preencha os dados abaixo para começar a organizar suas tarefas!</p>
+        <!-- O formulário agora não tem 'action', pois será controlado pelo JavaScript -->
         <form id="cadastroForm" class="login-form">
             <div class="form-group">
                 <label for="new-username">Nome de Usuário:</label>
@@ -28,9 +29,10 @@ v<!DOCTYPE html>
                 <input type="password" id="confirm-password" name="confirm-password" required>
             </div>
             <button type="submit" class="btn primary full-width">Cadastrar</button>
-            <p class="signup-link">Já tem uma conta? <a href="index.html">Faça Login</a></p>
+            <p class="signup-link">Já tem uma conta? <a href="login.html">Faça Login</a></p>
         </form>
-        <div id="mensagem" style="margin-top: 20px; text-align: center;"></div>
+        <!-- Div para mostrar mensagens de sucesso ou erro -->
+        <div id="mensagem" style="margin-top: 20px; text-align: center; font-weight: bold;"></div>
     </div>
 
     <script>
@@ -38,39 +40,59 @@ v<!DOCTYPE html>
         const mensagemDiv = document.getElementById('mensagem');
 
         cadastroForm.addEventListener('submit', function(event) {
-            // Impede o envio padrão do formulário, evitando que a página recarregue
-            event.preventDefault(); 
+            // Previne o comportamento padrão do formulário de recarregar a página
+            event.preventDefault();
 
-            // Captura os valores digitados nos campos do formulário
             const username = document.getElementById('new-username').value;
             const email = document.getElementById('new-email').value;
             const password = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
 
-            // Validação simples: verifica se as duas senhas digitadas são iguais
+            // Validação simples no front-end
             if (password !== confirmPassword) {
-                mensagemDiv.style.color = 'red'; // Define a cor do texto para vermelho
-                mensagemDiv.textContent = 'As senhas não coincidem!'; // Exibe a mensagem de erro
-                return; // Interrompe a função, impedindo o "cadastro"
+                mensagemDiv.style.color = 'red';
+                mensagemDiv.textContent = 'As senhas não coincidem!';
+                return;
             }
 
-            // --- ATENÇÃO: ESTE É APENAS UM CÓDIGO DE SIMULAÇÃO ---
-            // Como não há um backend (servidor/banco de dados) conectado agora,
-            // os dados do cadastro NÃO SÃO SALVOS.
-            // Apenas exibimos uma mensagem de sucesso para a interface do usuário.
-            mensagemDiv.style.color = 'green'; // Define a cor do texto para verde
-            mensagemDiv.textContent = 'Cadastro "realizado" com sucesso! (Dados não salvos ainda)';
-            
-            // Limpa todos os campos do formulário após a "submissão" simulada
-            cadastroForm.reset(); 
+            // Objeto com os dados para enviar para a API
+            const dadosUsuario = {
+                username: username,
+                email: email,
+                password: password
+            };
 
-            // Opcional: Redirecionar o usuário para a página de login após alguns segundos.
-            // Descomente as linhas abaixo se quiser essa funcionalidade.
-            /*
-            setTimeout(() => {
-                window.location.href = 'index.html'; // Redireciona para a página de login
-            }, 3000); // O redirecionamento ocorrerá após 3 segundos
-            */
+            // *** A MÁGICA ACONTECE AQUI ***
+            // Usamos o 'fetch' para enviar os dados para a sua API no Render
+            fetch('https://taskflex.onrender.com/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dadosUsuario)
+            })
+            .then(response => response.json()) // Converte a resposta da API para JSON
+            .then(data => {
+                // A API respondeu, vamos ver o que ela disse
+                if (data.message === 'Usuário criado com sucesso') {
+                    mensagemDiv.style.color = 'green';
+                    mensagemDiv.textContent = 'Cadastro realizado com sucesso! Redirecionando para o login...';
+                    // Aguarda 2 segundos e redireciona para a página de login
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    // Mostra a mensagem de erro que veio da API
+                    mensagemDiv.style.color = 'red';
+                    mensagemDiv.textContent = data.message || 'Erro ao cadastrar. Tente novamente.';
+                }
+            })
+            .catch(error => {
+                // Caso ocorra um erro de rede ou a API esteja fora do ar
+                console.error('Erro na requisição:', error);
+                mensagemDiv.style.color = 'red';
+                mensagemDiv.textContent = 'Não foi possível conectar ao servidor. Tente mais tarde.';
+            });
         });
     </script>
 </body>
