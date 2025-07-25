@@ -9,40 +9,78 @@
     <style>
         .quote-container {
             text-align: center;
-            margin: -15px 0 25px 0;
+            margin: -15px auto 25px auto;
             padding: 10px;
-            background-color: #eef2f7;
+            background-color: #f0f9ff;
             border-radius: 8px;
             font-style: italic;
-            color: #555;
-            border: 1px solid #dce0e1;
+            color: #0c4a6e;
+            border: 1px solid #bae6fd;
+            max-width: 80%;
         }
-        .zen-mode-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.5em;
-            margin-left: 15px;
-            vertical-align: middle;
-            color: #fff;
-            transition: transform 0.3s ease;
+        .task-item.overdue {
+            border-left: 5px solid #ef4444;
+            background-color: #fef2f2;
         }
-        .zen-mode-btn:hover {
-            transform: scale(1.2);
+        .overdue-warning {
+            color: #b91c1c;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 20px;
         }
-        /* Estilos do Modo Zen */
-        body.zen-mode header,
-        body.zen-mode footer,
-        body.zen-mode .task-controls,
-        body.zen-mode h2,
-        body.zen-mode .quote-container {
-            display: none !important;
+        .focus-btn {
+            background: none; border: none; cursor: pointer; font-size: 1.3em;
+            margin-right: 10px; transition: transform 0.2s;
         }
-        body.zen-mode {
-            background-color: #d8e2dc;
+        .focus-btn:hover { transform: scale(1.3); }
+        .focus-btn.is-focus { color: orange; }
+
+        #focus-task-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #fffbeb, #fefce8);
+            border: 2px dashed #facc15;
+            border-radius: 10px;
         }
-        body.zen-mode main {
-            padding-top: 5vh;
+        #focus-task-container h3 {
+            margin-top: 0;
+            color: #ca8a04;
+            text-align: center;
+        }
+        #focus-task-container .task-item { border-left-color: #facc15; }
+
+        #dashboard-section { text-align: center; }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 30%;
+        }
+        .stat-card h4 { margin-top: 0; color: #22127e; }
+        .stat-card p { font-size: 2.5em; font-weight: bold; color: #4324d5; margin: 0; }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 30px;
+            background: linear-gradient(90deg, #4324d5, #2ecc71);
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s ease-in-out;
         }
     </style>
 </head>
@@ -50,15 +88,12 @@
     <header>
         <div class="container">
             <h1>TaskFlex</h1>
-            <div>
-                <span id="logged-in-user" class="logged-in-user"></span>
-                <!-- Botão Surpresa 1: Modo Zen -->
-                <button id="zen-mode-toggle" class="zen-mode-btn" title="Modo Zen">🧘</button>
-            </div>
+            <span id="logged-in-user" class="logged-in-user"></span>
             <nav>
                 <ul>
                     <li><a href="#" id="nav-my-tasks" class="active">Minhas Tarefas</a></li>
-                    <li><a href="#" id="nav-about">Sobre o TaskFlex</a></li>
+                    <li><a href="#" id="nav-dashboard">Meu Desempenho</a></li>
+                    <li><a href="#" id="nav-about">Sobre</a></li>
                     <li><a href="index.html" id="logout-btn" class="btn btn-sm">Sair</a></li>
                 </ul>
             </nav>
@@ -69,8 +104,11 @@
         <section id="my-tasks" class="tasks-section">
             <div class="container">
                 <h2>Minhas Tarefas</h2>
-                <!-- Container Surpresa 2: Frase Motivacional -->
                 <div id="quote-container" class="quote-container"></div>
+                <div id="focus-task-container" class="hidden">
+                    <h3>⭐ Foco do Dia</h3>
+                    <ul id="focus-task-list" class="task-list"></ul>
+                </div>
                 <div class="task-controls">
                     <button id="btn-new-task" class="btn">Nova Tarefa</button>
                     <div class="filters">
@@ -83,97 +121,44 @@
             </div>
         </section>
 
-        <section id="new-task-form-section" class="new-task-section hidden">
+        <section id="new-task-form-section" class="new-task-section hidden"></section>
+
+        <section id="about-taskflex" class="about-section hidden"></section>
+
+        <section id="dashboard-section" class="hidden">
             <div class="container">
-                <h2 id="form-title">Nova Tarefa</h2>
-                <form id="task-form">
-                    <input type="hidden" id="task-id">
-                    <div class="form-group">
-                        <label for="task-title">Título:</label>
-                        <input type="text" id="task-title" name="task-title" required>
+                <h2>Meu Desempenho</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h4>Total de Tarefas</h4>
+                        <p id="stat-total">0</p>
                     </div>
-                    <div class="form-group">
-                        <label for="task-description">Descrição:</label>
-                        <textarea id="task-description" name="task-description" rows="4"></textarea>
+                    <div class="stat-card">
+                        <h4>Concluídas</h4>
+                        <p id="stat-completed">0</p>
                     </div>
-                    <div class="form-group">
-                        <label for="delivery-date">Data de Entrega:</label>
-                        <input type="date" id="delivery-date" name="delivery-date">
+                    <div class="stat-card">
+                        <h4>Pendentes</h4>
+                        <p id="stat-pending">0</p>
                     </div>
-                    <div class="form-group">
-                        <label for="priority">Prioridade:</label>
-                        <select id="priority" name="priority">
-                            <option value="high">Alta</option>
-                            <option value="medium" selected>Média</option>
-                            <option value="low">Baixa</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn primary">Salvar</button>
-                        <button type="button" class="btn secondary" id="btn-cancel-task">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-        <!-- Secção "Sobre" Atualizada -->
-        <section id="about-taskflex" class="about-section hidden">
-            <div class="container">
-                <h2>Sobre o TaskFlex</h2>
-                <h3>Sua Solução Definitiva para Gerenciamento de Tarefas</h3>
-                <p>O TaskFlex é um site/aplicativo de gerenciamento de tarefas que permite ao usuário organizar atividades diárias, definir prazos e acompanhar o progresso de maneira visual e intuitiva.</p>
-
-                <h3>Problema que Resolvemos</h3>
-                <p>Muitas pessoas se perdem nas suas obrigações diárias por não terem uma forma simples e eficiente de organizar suas tarefas, o que gera estresse, baixa produtividade e esquecimento de compromissos importantes.</p>
-
-                <h3>Por que o TaskFlex é Bom e Necessário?</h3>
-                <ul>
-                    <li><strong>Impacto Social:</strong> Aumenta a organização pessoal e o bem-estar dos usuários, reduzindo o estresse e promovendo uma rotina mais equilibrada.</li>
-                    <li><strong>Impacto Econômico:</strong> Ajuda profissionais a ganharem produtividade, evitando retrabalho e otimizando o tempo, o que se traduz em maior eficiência e resultados.</li>
-                    <li><strong>Impacto Ambiental:</strong> Reduz o uso de papel com anotações físicas, promovendo um planejamento digital e sustentável.</li>
-                </ul>
-            </div>
-        </section>
-
-        <section id="calendar-section" class="calendar-section hidden">
-            <div class="container">
-                <h2>Calendário</h2>
-                <div class="calendar-header">
-                    <button id="prev-month-btn" class="btn secondary">&lt;</button>
-                    <h3 id="current-month-year"></h3>
-                    <button id="next-month-btn" class="btn secondary">&gt;</button>
                 </div>
-                <div class="calendar-grid-container">
-                    <div class="calendar-weekdays">
-                        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
-                    </div>
-                    <div id="calendar-days" class="calendar-days"></div>
+                <h4>Progresso Geral</h4>
+                <div class="progress-bar-container">
+                    <div id="progress-bar" class="progress-bar">0%</div>
                 </div>
-                <button id="btn-close-calendar" class="btn secondary full-width">Fechar Calendário</button>
             </div>
         </section>
+
     </main>
 
     <footer>
         <div class="container">
-            <button class="btn footer-btn" id="btn-show-calendar">Ver calendário</button>
             <p>&copy; 2025 TaskFlex. Todos os direitos reservados.</p>
         </div>
     </footer>
 
     <script>
         const API_URL = 'https://taskflex.onrender.com';
-
-        // Elementos da página
-        const taskListEl = document.getElementById('task-list');
-        const loggedInUserEl = document.getElementById('logged-in-user');
-        const taskFormSectionEl = document.getElementById('new-task-form-section');
-        const myTasksSectionEl = document.getElementById('my-tasks');
-        const aboutSectionEl = document.getElementById('about-taskflex');
-        const taskFormEl = document.getElementById('task-form');
-        const calendarSectionEl = document.getElementById('calendar-section');
-        const quoteContainerEl = document.getElementById('quote-container');
-
         let allTasks = [];
 
         // --- Lógica de Autenticação e Carregamento Inicial ---
@@ -187,32 +172,14 @@
                 return;
             }
 
-            loggedInUserEl.textContent = `Olá, ${username}!`;
-            loggedInUserEl.style.display = 'inline-block';
+            document.getElementById('logged-in-user').textContent = `Olá, ${username}!`;
+            document.getElementById('logged-in-user').style.display = 'inline-block';
+            
+            // Carregar o conteúdo das seções dinâmicas
+            loadDynamicContent();
+            
             loadTasks(userId);
             showMotivationalQuote();
-        });
-
-        // --- Funções de Navegação ---
-        function showSection(sectionToShow) {
-            [myTasksSectionEl, aboutSectionEl, taskFormSectionEl, calendarSectionEl].forEach(section => {
-                section.classList.add('hidden');
-            });
-            sectionToShow.classList.remove('hidden');
-        }
-
-        document.getElementById('nav-my-tasks').addEventListener('click', (e) => { e.preventDefault(); showSection(myTasksSectionEl); });
-        document.getElementById('nav-about').addEventListener('click', (e) => { e.preventDefault(); showSection(aboutSectionEl); });
-        document.getElementById('btn-new-task').addEventListener('click', () => {
-            taskFormEl.reset();
-            document.getElementById('task-id').value = '';
-            document.getElementById('form-title').textContent = 'Nova Tarefa';
-            showSection(taskFormSectionEl);
-        });
-        document.getElementById('btn-cancel-task').addEventListener('click', () => showSection(myTasksSectionEl));
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            localStorage.removeItem('userId');
-            localStorage.removeItem('username');
         });
 
         // --- Lógica de Tarefas (API) ---
@@ -221,49 +188,77 @@
             try {
                 const response = await fetch(`${API_URL}/api/users/${userId}/tasks`);
                 allTasks = await response.json();
-                
-                // **NOVO: Ordenar tarefas por prioridade**
-                const priorityMap = { 'high': 3, 'medium': 2, 'low': 1 };
-                allTasks.sort((a, b) => {
-                    const priorityA = priorityMap[a.priority] || 0;
-                    const priorityB = priorityMap[b.priority] || 0;
-                    return priorityB - priorityA;
-                });
-
-                renderTaskList(allTasks);
+                renderUI();
             } catch (error) {
                 console.error('Erro ao carregar tarefas:', error);
-                alert('Não foi possível carregar as tarefas.');
             }
         }
 
-        function renderTaskList(tasksToRender) {
-            taskListEl.innerHTML = '';
+        function renderUI() {
+            // Ordenar tarefas: pendentes primeiro, depois por prioridade
+            const priorityMap = { 'high': 3, 'medium': 2, 'low': 1 };
+            allTasks.sort((a, b) => {
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                return (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0);
+            });
+            
+            const focusTaskId = localStorage.getItem('focusTaskId');
+            const focusTask = focusTaskId ? allTasks.find(t => t.id == focusTaskId) : null;
+            
+            const regularTasks = focusTask ? allTasks.filter(t => t.id != focusTaskId) : allTasks;
+            
+            renderTaskList(regularTasks, document.getElementById('task-list'));
+            
+            const focusContainer = document.getElementById('focus-task-container');
+            const focusList = document.getElementById('focus-task-list');
+            if(focusTask) {
+                renderTaskList([focusTask], focusList);
+                focusContainer.classList.remove('hidden');
+            } else {
+                focusContainer.classList.add('hidden');
+            }
+
+            updateDashboard();
+        }
+
+        function renderTaskList(tasksToRender, targetElement) {
+            targetElement.innerHTML = '';
             tasksToRender.forEach(task => {
                 const item = document.createElement('li');
-                item.className = `task-item ${task.completed ? 'completed' : 'pending'}`;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const dueDate = task.dueDate ? new Date(task.dueDate + 'T00:00:00') : null;
+                const isOverdue = dueDate && dueDate < today && !task.completed;
+
+                item.className = `task-item ${task.completed ? 'completed' : 'pending'} ${isOverdue ? 'overdue' : ''}`;
                 item.dataset.id = task.id;
 
-                const formattedDate = task.dueDate ? new Date(task.dueDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Sem prazo';
+                const formattedDate = dueDate ? dueDate.toLocaleDateString('pt-BR') : 'Sem prazo';
+                const focusTaskId = localStorage.getItem('focusTaskId');
 
                 item.innerHTML = `
-                    <input type="checkbox" ${task.completed ? 'checked' : ''}>
-                    <label>${task.title} – Prazo: ${formattedDate}</label>
+                    <div>
+                        <button class="focus-btn ${task.id == focusTaskId ? 'is-focus' : ''}" title="Focar nesta tarefa">⭐</button>
+                        <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                        <label>${task.title} – Prazo: ${formattedDate}</label>
+                        ${isOverdue ? '<span class="overdue-warning">ATRASADA!</span>' : ''}
+                    </div>
                     <div class="task-actions">
                         <button class="edit-task-btn">Editar</button>
                         <button class="delete-task-btn">Excluir</button>
                     </div>
                 `;
                 
+                item.querySelector('.focus-btn').addEventListener('click', () => toggleFocus(task.id));
                 item.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleTaskCompletion(task.id, e.target.checked));
                 item.querySelector('.edit-task-btn').addEventListener('click', () => handleEdit(task));
                 item.querySelector('.delete-task-btn').addEventListener('click', () => deleteTask(task.id));
 
-                taskListEl.appendChild(item);
+                targetElement.appendChild(item);
             });
         }
-
-        taskFormEl.addEventListener('submit', async (event) => {
+        
+        async function submitTaskForm(event) {
             event.preventDefault();
             const userId = localStorage.getItem('userId');
             const taskId = document.getElementById('task-id').value;
@@ -280,20 +275,17 @@
             const method = taskId ? 'PUT' : 'POST';
 
             try {
-                const response = await fetch(url, {
+                await fetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(taskData)
                 });
-                if (!response.ok) throw new Error('Falha ao salvar a tarefa.');
-                
                 await loadTasks(userId);
-                showSection(myTasksSectionEl);
+                showSection(document.getElementById('my-tasks'));
             } catch (error) {
-                console.error('Erro ao salvar tarefa:', error);
                 alert('Não foi possível salvar a tarefa.');
             }
-        });
+        }
 
         async function deleteTask(taskId) {
             if (!confirm('Tem a certeza que deseja excluir esta tarefa?')) return;
@@ -301,13 +293,12 @@
                 await fetch(`${API_URL}/api/tasks/${taskId}`, { method: 'DELETE' });
                 await loadTasks(localStorage.getItem('userId'));
             } catch (error) {
-                console.error('Erro ao excluir tarefa:', error);
                 alert('Não foi possível excluir a tarefa.');
             }
         }
         
         function handleEdit(task) {
-            showSection(taskFormSectionEl);
+            showSection(document.getElementById('new-task-form-section'));
             document.getElementById('form-title').textContent = 'Editar Tarefa';
             document.getElementById('task-id').value = task.id;
             document.getElementById('task-title').value = task.title;
@@ -325,94 +316,99 @@
                 });
                 await loadTasks(localStorage.getItem('userId'));
             } catch (error) {
-                console.error('Erro ao atualizar tarefa:', error);
                 alert('Não foi possível atualizar o estado da tarefa.');
             }
         }
 
-        // --- Lógica dos Filtros ---
-        document.querySelectorAll('.filter-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                const filter = this.dataset.filter;
-                let filteredTasks = allTasks;
-                if (filter === 'pending') {
-                    filteredTasks = allTasks.filter(task => !task.completed);
-                } else if (filter === 'completed') {
-                    filteredTasks = allTasks.filter(task => task.completed);
-                }
-                renderTaskList(filteredTasks);
-            });
-        });
+        // --- Funções Surpresa e Extras ---
 
-        // --- Lógica do Calendário ---
-        const currentMonthYearEl = document.getElementById('current-month-year');
-        const calendarDaysEl = document.getElementById('calendar-days');
-        let currentDate = new Date();
-
-        function renderCalendar() {
-            calendarDaysEl.innerHTML = '';
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            currentMonthYearEl.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-
-            const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-            const daysInMonth = lastDayOfMonth.getDate();
-            const startDay = firstDayOfMonth.getDay();
-
-            for (let i = 0; i < startDay; i++) {
-                calendarDaysEl.innerHTML += `<div class="calendar-day empty"></div>`;
+        function toggleFocus(taskId) {
+            const currentFocus = localStorage.getItem('focusTaskId');
+            if (currentFocus == taskId) {
+                localStorage.removeItem('focusTaskId');
+            } else {
+                localStorage.setItem('focusTaskId', taskId);
             }
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dayDiv = document.createElement('div');
-                dayDiv.classList.add('calendar-day');
-                dayDiv.textContent = day;
-                const today = new Date();
-                if (currentDate.getFullYear() === today.getFullYear() && currentDate.getMonth() === today.getMonth() && day === today.getDate()) {
-                    dayDiv.classList.add('today');
-                }
-                calendarDaysEl.appendChild(dayDiv);
-            }
+            renderUI();
         }
 
-        document.getElementById('prev-month-btn').addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() - 1);
-            renderCalendar();
-        });
+        function updateDashboard() {
+            const total = allTasks.length;
+            const completed = allTasks.filter(t => t.completed).length;
+            const pending = total - completed;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-        document.getElementById('next-month-btn').addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            renderCalendar();
-        });
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-pending').textContent = pending;
+            
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${percentage}%`;
+            progressBar.textContent = `${percentage}%`;
+        }
 
-        document.getElementById('btn-show-calendar').addEventListener('click', () => {
-            showSection(calendarSectionEl);
-            renderCalendar();
-        });
-        document.getElementById('btn-close-calendar').addEventListener('click', () => showSection(myTasksSectionEl));
-
-        // --- Funções Surpresa ---
-
-        // 1. Frase Motivacional
         function showMotivationalQuote() {
             const quotes = [
-                "O segredo para progredir é começar.",
-                "Acredite que você pode, assim você já está no meio do caminho.",
-                "A persistência realiza o impossível.",
-                "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+                "O segredo para progredir é começar.", "Acredite que você pode, assim você já está no meio do caminho.",
+                "A persistência realiza o impossível.", "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
                 "Comece onde você está. Use o que você tem. Faça o que você pode."
-            ];A
+            ];
             const randomIndex = Math.floor(Math.random() * quotes.length);
-            quoteContainerEl.textContent = `"${quotes[randomIndex]}"`;
+            document.getElementById('quote-container').textContent = `"${quotes[randomIndex]}"`;
         }
 
-        // 2. Modo Zen
-        document.getElementById('zen-mode-toggle').addEventListener('click', () => {
-            document.body.classList.toggle('zen-mode');
-        });
+        // --- Lógica de Navegação e Conteúdo Dinâmico ---
+        function showSection(sectionToShow) {
+            [document.getElementById('my-tasks'), document.getElementById('about-taskflex'), 
+             document.getElementById('new-task-form-section'), document.getElementById('dashboard-section')]
+             .forEach(section => section.classList.add('hidden'));
+            sectionToShow.classList.remove('hidden');
+        }
+        
+        function loadDynamicContent() {
+            // Carrega o formulário
+            document.getElementById('new-task-form-section').innerHTML = `
+                <div class="container">
+                    <h2 id="form-title">Nova Tarefa</h2>
+                    <form id="task-form">
+                        <input type="hidden" id="task-id">
+                        <div class="form-group"><label for="task-title">Título:</label><input type="text" id="task-title" required></div>
+                        <div class="form-group"><label for="task-description">Descrição:</label><textarea id="task-description" rows="4"></textarea></div>
+                        <div class="form-group"><label for="delivery-date">Data de Entrega:</label><input type="date" id="delivery-date"></div>
+                        <div class="form-group"><label for="priority">Prioridade:</label><select id="priority"><option value="high">Alta</option><option value="medium" selected>Média</option><option value="low">Baixa</option></select></div>
+                        <div class="form-actions"><button type="submit" class="btn primary">Salvar</button><button type="button" class="btn secondary" id="btn-cancel-task">Cancelar</button></div>
+                    </form>
+                </div>`;
+            
+            // Carrega a seção "Sobre"
+            document.getElementById('about-taskflex').innerHTML = `
+                <div class="container">
+                    <h2>Sobre o TaskFlex</h2>
+                    <h3>Sua Solução Definitiva para Gerenciamento de Tarefas</h3>
+                    <p>O TaskFlex é um site/aplicativo de gerenciamento de tarefas que permite ao usuário organizar atividades diárias, definir prazos e acompanhar o progresso de maneira visual e intuitiva.</p>
+                    <h3>Problema que Resolvemos</h3>
+                    <p>Muitas pessoas se perdem nas suas obrigações diárias por não terem uma forma simples e eficiente de organizar suas tarefas, o que gera estresse, baixa produtividade e esquecimento de compromissos importantes.</p>
+                    <h3>Por que o TaskFlex é Bom e Necessário?</h3>
+                    <ul>
+                        <li><strong>Impacto Social:</strong> Aumenta a organização pessoal e o bem-estar dos usuários, reduzindo o estresse e promovendo uma rotina mais equilibrada.</li>
+                        <li><strong>Impacto Econômico:</strong> Ajuda profissionais a ganharem produtividade, evitando retrabalho e otimizando o tempo, o que se traduz em maior eficiência e resultados.</li>
+                        <li><strong>Impacto Ambiental:</strong> Reduz o uso de papel com anotações físicas, promovendo um planejamento digital e sustentável.</li>
+                    </ul>
+                </div>`;
 
+            // Adiciona os event listeners aos elementos recém-criados
+            document.getElementById('task-form').addEventListener('submit', submitTaskForm);
+            document.getElementById('btn-cancel-task').addEventListener('click', () => showSection(document.getElementById('my-tasks')));
+            document.getElementById('nav-my-tasks').addEventListener('click', (e) => { e.preventDefault(); showSection(document.getElementById('my-tasks')); });
+            document.getElementById('nav-about').addEventListener('click', (e) => { e.preventDefault(); showSection(document.getElementById('about-taskflex')); });
+            document.getElementById('nav-dashboard').addEventListener('click', (e) => { e.preventDefault(); showSection(document.getElementById('dashboard-section')); });
+            document.getElementById('btn-new-task').addEventListener('click', () => {
+                document.getElementById('task-form').reset();
+                document.getElementById('task-id').value = '';
+                document.getElementById('form-title').textContent = 'Nova Tarefa';
+                showSection(document.getElementById('new-task-form-section'));
+            });
+        }
     </script>
 </body>
 </html>
