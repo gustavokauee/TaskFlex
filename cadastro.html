@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlex - Cadastro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <h2>Criar sua Conta TaskFlex</h2>
+        <p>Preencha os dados abaixo para começar a organizar suas tarefas!</p>
+        <form id="cadastroForm" class="login-form">
+            <div class="form-group">
+                <label for="new-username">Nome de Usuário:</label>
+                <input type="text" id="new-username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="new-email">E-mail:</label>
+                <input type="email" id="new-email" name="new-email" required>
+            </div>
+            <div class="form-group">
+                <label for="new-password">Senha:</label>
+                <input type="password" id="new-password" name="new-password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirmar Senha:</label>
+                <input type="password" id="confirm-password" name="confirm-password" required>
+            </div>
+            <button type="submit" class="btn primary full-width">Cadastrar</button>
+            <p class="signup-link">Já tem uma conta? <a href="login.html">Faça Login</a></p>
+        </form>
+        <div id="mensagem" style="margin-top: 20px; text-align: center;"></div>
+    </div>
+
+    <script>
+        const cadastroForm = document.getElementById('cadastroForm');
+        const mensagemDiv = document.getElementById('mensagem');
+
+        cadastroForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('new-username').value;
+            const email = document.getElementById('new-email').value;
+            const password = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (password !== confirmPassword) {
+                mensagemDiv.style.color = 'red';
+                mensagemDiv.textContent = 'As senhas não coincidem!';
+                return;
+            }
+
+            const dadosUsuario = {
+                username: username,
+                email: email,
+                password: password
+            };
+
+            // *** MUDANÇA AQUI: URL do seu script PHP ***
+            // Assumimos que 'processa_cadastro.php' estará na mesma pasta do seu HTML,
+            // dentro de uma subpasta no htdocs do XAMPP (ex: htdocs/taskflex/processa_cadastro.php)
+            fetch('processa_cadastro.php', { // ou 'http://localhost/sua_pasta/processa_cadastro.php'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json' // É importante manter este cabeçalho!
+                },
+                body: JSON.stringify(dadosUsuario)
+            })
+            .then(response => {
+                // PHP vai responder com JSON, então parseamos como JSON
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.mensagem || 'Erro desconhecido no servidor PHP'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.sucesso) {
+                    mensagemDiv.style.color = 'green';
+                    mensagemDiv.textContent = data.mensagem || 'Cadastro realizado com sucesso!';
+                    cadastroForm.reset();
+                    // Opcional: Redirecionar para a página de login ou dashboard
+                    // window.location.href = 'login.html';
+                } else {
+                    mensagemDiv.style.color = 'red';
+                    mensagemDiv.textContent = data.mensagem || 'Erro ao cadastrar. Tente novamente.';
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                mensagemDiv.style.color = 'red';
+                mensagemDiv.textContent = 'Erro de conexão ou no servidor: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>

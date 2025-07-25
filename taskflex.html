@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlex - Minhas Tarefas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>TaskFlex</h1>
+            <span id="logged-in-user" class="logged-in-user"></span> <nav>
+                <ul>
+                    <li><a href="#" class="active">Minhas Tarefas</a></li>
+                    <li><a href="#about-taskflex">Sobre o TaskFlex</a></li>
+                    <li><a href="login.html" class="btn btn-sm">Trocar Usuário</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="my-tasks" class="tasks-section">
+            <div class="container">
+                <h2>Minhas Tarefas</h2>
+                <div class="task-controls">
+                    <button id="btn-new-task" class="btn">Nova Tarefa</button>
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">Todas</button>
+                        <button class="filter-btn" data-filter="pending">Pendentes</button>
+                        <button class="filter-btn" data-filter="completed">Concluídas</button>
+                    </div>
+                </div>
+
+                <ul id="task-list" class="task-list">
+                    <li class="task-item pending" data-id="task1" data-title="Comprar mantimentos" data-description="Leite, pão, ovos e frutas." data-date="2025-07-25" data-priority="medium">
+                        <input type="checkbox" id="task1_checkbox">
+                        <label for="task1_checkbox">Comprar mantimentos – Prazo: 25/07/2025</label>
+                        <div class="task-actions">
+                            <button class="edit-task-btn">Editar</button>
+                            <button class="delete-task-btn">Excluir</button>
+                        </div>
+                    </li>
+                    <li class="task-item completed" data-id="task2" data-title="Enviar relatório mensal" data-description="Relatório de vendas do mês de julho." data-date="2025-07-20" data-priority="high">
+                        <input type="checkbox" id="task2_checkbox" checked>
+                        <label for="task2_checkbox">Enviar relatório mensal – Prazo: 20/07/2025</label>
+                        <div class="task-actions">
+                            <button class="edit-task-btn">Editar</button>
+                            <button class="delete-task-btn">Excluir</button>
+                        </div>
+                    </li>
+                    <li class="task-item pending" data-id="task3" data-title="Agendar consulta médica" data-description="Consulta de rotina com o Dr. Silva." data-date="2025-07-30" data-priority="high">
+                        <input type="checkbox" id="task3_checkbox">
+                        <label for="task3_checkbox">Agendar consulta médica – Prazo: 30/07/2025</label>
+                        <div class="task-actions">
+                            <button class="edit-task-btn">Editar</button>
+                            <button class="delete-task-btn">Excluir</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="new-task-form" class="new-task-section hidden">
+            <div class="container">
+                <h2>Nova Tarefa</h2>
+                <form action="#" method="POST">
+                    <div class="form-group">
+                        <label for="task-title">Título:</label>
+                        <input type="text" id="task-title" name="task-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-description">Descrição:</label>
+                        <textarea id="task-description" name="task-description" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="delivery-date">Data de Entrega:</label>
+                        <input type="date" id="delivery-date" name="delivery-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Prioridade:</label>
+                        <select id="priority" name="priority">
+                            <option value="high">Alta</option>
+                            <option value="medium" selected>Média</option>
+                            <option value="low">Baixa</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary">Salvar</button>
+                        <button type="button" class="btn secondary" id="btn-cancel-task">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="about-taskflex" class="about-section hidden">
+            <div class="container">
+                <h2>Sobre o TaskFlex</h2>
+                <h3>Sua Solução Definitiva para Gerenciamento de Tarefas</h3>
+                <p>O TaskFlex é um site/aplicativo de gerenciamento de tarefas que permite ao usuário organizar atividades diárias, definir prazos e acompanhar o progresso de maneira visual e intuitiva.</p>
+
+                <h3>Problema que Resolvemos</h3>
+                <p>Muitas pessoas se perdem nas suas obrigações diárias por não terem uma forma simples e eficiente de organizar suas tarefas, o que gera estresse, baixa produtividade e esquecimento de compromissos importantes.</p>
+
+                <h3>Por que o TaskFlex é Bom e Necessário?</h3>
+                <ul>
+                    <li><strong>Impacto Social:</strong> Aumenta a organização pessoal e o bem-estar dos usuários, reduzindo o estresse e promovendo uma rotina mais equilibrada.</li>
+                    <li><strong>Impacto Econômico:</strong> Ajuda profissionais a ganharem produtividade, evitando retrabalho e otimizando o tempo, o que se traduz em maior eficiência e resultados.</li>
+                    <li><strong>Impacto Ambiental:</strong> Reduz o uso de papel com anotações físicas, promovendo um planejamento digital e sustentável.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="calendar-section" class="calendar-section hidden">
+            <div class="container">
+                <h2>Calendário</h2>
+                <div class="calendar-header">
+                    <button id="prev-month-btn" class="btn secondary">&lt;</button>
+                    <h3 id="current-month-year">Julho 2025</h3>
+                    <button id="next-month-btn" class="btn secondary">&gt;</button>
+                </div>
+                <div class="calendar-grid-container">
+                    <div class="calendar-weekdays">
+                        <span>Dom</span>
+                        <span>Seg</span>
+                        <span>Ter</span>
+                        <span>Qua</span>
+                        <span>Qui</span>
+                        <span>Sex</span>
+                        <span>Sáb</span>
+                    </div>
+                    <div id="calendar-days" class="calendar-days">
+                        </div>
+                </div>
+                <button id="btn-close-calendar" class="btn secondary full-width">Fechar Calendário</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <button class="btn footer-btn" id="btn-show-calendar">Ver calendário</button>
+            <p>&copy; 2025 TaskFlex. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Lógica para exibir o usuário logado ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('username');
+            const loggedInUserElement = document.getElementById('logged-in-user');
+
+            if (username) {
+                loggedInUserElement.textContent = `Olá, ${username}!`;
+                loggedInUserElement.style.display = 'block';
+            } else {
+                loggedInUserElement.style.display = 'none';
+            }
+        });
+
+        // Seleciona os elementos principais
+        const btnNewTask = document.getElementById('btn-new-task');
+        const btnCancelTask = document.getElementById('btn-cancel-task');
+        const myTasksSection = document.getElementById('my-tasks');
+        const newTaskFormSection = document.getElementById('new-task-form');
+        const aboutTaskFlexSection = document.getElementById('about-taskflex');
+        const calendarSection = document.getElementById('calendar-section');
+        const btnShowCalendar = document.getElementById('btn-show-calendar');
+        const btnCloseCalendar = document.getElementById('btn-close-calendar');
+
+        const taskList = document.getElementById('task-list');
+        const taskForm = newTaskFormSection.querySelector('form');
+        const taskTitleInput = document.getElementById('task-title');
+        const taskDescriptionInput = document.getElementById('task-description');
+        const deliveryDateInput = document.getElementById('delivery-date');
+        const prioritySelect = document.getElementById('priority');
+
+        let editingTaskId = null; // Variável para armazenar o ID da tarefa que está sendo editada
+
+        // Elementos do calendário
+        const currentMonthYear = document.getElementById('current-month-year');
+        const calendarDays = document.getElementById('calendar-days');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+
+        let currentDate = new Date();
+
+        // --- Funções de Navegação Principal ---
+        function hideAllSections() {
+            myTasksSection.classList.add('hidden');
+            newTaskFormSection.classList.add('hidden');
+            aboutTaskFlexSection.classList.add('hidden');
+            calendarSection.classList.add('hidden');
+        }
+
+        // Minhas Tarefas
+        document.querySelector('nav ul li:first-child a').addEventListener('click', function(e) {
+            e.preventDefault();
+            hideAllSections();
+            myTasksSection.classList.remove('hidden');
+        });
+
+        // Sobre o TaskFlex
+        document.querySelector('nav ul li:nth-child(2) a').addEventListener('click', function(e) {
+            e.preventDefault();
+            hideAllSections();
+            aboutTaskFlexSection.classList.remove('hidden');
+        });
+
+        // Abrir o formulário de Nova Tarefa
+        btnNewTask.addEventListener('click', function() {
+            hideAllSections();
+            newTaskFormSection.classList.remove('hidden');
+            taskForm.reset(); // Limpa o formulário
+            editingTaskId = null; // Garante que estamos criando uma nova tarefa
+            newTaskFormSection.querySelector('h2').textContent = 'Nova Tarefa'; // Altera o título do formulário
+        });
+
+        // Cancelar/Fechar o formulário de Nova Tarefa
+        btnCancelTask.addEventListener('click', function() {
+            hideAllSections();
+            myTasksSection.classList.remove('hidden');
+            taskForm.reset();
+            editingTaskId = null;
+        });
+
+        // --- Lógica do Calendário ---
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+        function renderCalendar() {
+            calendarDays.innerHTML = '';
+            currentMonthYear.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+            const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const daysInMonth = lastDayOfMonth.getDate();
+            const firstWeekday = firstDayOfMonth.getDay();
+
+            // Preenche os dias vazios antes do primeiro dia do mês
+            for (let i = 0; i < firstWeekday; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.classList.add('calendar-day', 'empty');
+                calendarDays.appendChild(emptyDiv);
+            }
+
+            // Preenche os dias do mês
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.classList.add('calendar-day');
+                dayDiv.textContent = day;
+
+                const today = new Date();
+                if (currentDate.getFullYear() === today.getFullYear() &&
+                    currentDate.getMonth() === today.getMonth() &&
+                    day === today.getDate()) {
+                    dayDiv.classList.add('today');
+                }
+                calendarDays.appendChild(dayDiv);
+            }
+        }
+
+        // Navegação entre meses
+        prevMonthBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // Botão "Ver calendário" no rodapé
+        btnShowCalendar.addEventListener('click', function() {
+            hideAllSections();
+            calendarSection.classList.remove('hidden');
+            renderCalendar();
+        });
+
+        // Botão "Fechar Calendário" dentro da seção do calendário
+        btnCloseCalendar.addEventListener('click', function() {
+            hideAllSections();
+            myTasksSection.classList.remove('hidden');
+        });
+
+        // --- Lógica para ADICIONAR/EDITAR NOVA TAREFA ---
+        taskForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const title = taskTitleInput.value;
+            const description = taskDescriptionInput.value;
+            const date = deliveryDateInput.value;
+            const priority = prioritySelect.value;
+
+            if (title.trim() === '' || date.trim() === '') {
+                alert('Por favor, preencha o título e a data de entrega da tarefa.');
+                return;
+            }
+
+            // A data formatada para exibição
+            const formattedDate = date ? new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Sem prazo';
+
+            if (editingTaskId) {
+                // Modo de Edição
+                const taskToEdit = document.querySelector(`[data-id="${editingTaskId}"]`);
+                if (taskToEdit) {
+                    taskToEdit.querySelector('label').textContent = `${title} – Prazo: ${formattedDate}`;
+                    // Atualiza os data-attributes para manter os dados completos
+                    taskToEdit.dataset.title = title;
+                    taskToEdit.dataset.description = description;
+                    taskToEdit.dataset.date = date; // Salva a data no formato YYYY-MM-DD
+                    taskToEdit.dataset.priority = priority;
+                }
+            } else {
+                // Modo de Criação
+                const newItem = document.createElement('li');
+                // Gerar um ID único para a nova tarefa
+                const newTaskId = 'task' + Date.now(); // Usa timestamp para garantir unicidade
+                newItem.classList.add('task-item', 'pending');
+                newItem.dataset.id = newTaskId; // Define o data-id
+                newItem.dataset.title = title; // Armazena o título original
+                newItem.dataset.description = description; // Armazena a descrição
+                newItem.dataset.date = date; // Armazena a data original (YYYY-MM-DD)
+                newItem.dataset.priority = priority; // Armazena a prioridade
+
+                newItem.innerHTML = `
+                    <input type="checkbox" id="${newTaskId}_checkbox">
+                    <label for="${newTaskId}_checkbox">${title} – Prazo: ${formattedDate}</label>
+                    <div class="task-actions">
+                        <button class="edit-task-btn">Editar</button>
+                        <button class="delete-task-btn">Excluir</button>
+                    </div>
+                `;
+
+                taskList.appendChild(newItem);
+
+                // Adicionar listeners para a nova tarefa
+                newItem.querySelector(`#${newTaskId}_checkbox`).addEventListener('change', toggleTaskCompletion);
+                newItem.querySelector('.delete-task-btn').addEventListener('click', deleteTask);
+                newItem.querySelector('.edit-task-btn').addEventListener('click', editTask); // Adiciona listener para editar
+            }
+
+            taskForm.reset();
+            editingTaskId = null; // Reseta o modo de edição
+            newTaskFormSection.querySelector('h2').textContent = 'Nova Tarefa'; // Volta o título do formulário
+            hideAllSections();
+            myTasksSection.classList.remove('hidden');
+        });
+
+        // --- Lógica para FILTRAR TAREFAS ---
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.dataset.filter;
+                document.querySelectorAll('.task-item').forEach(item => {
+                    item.style.display = 'flex';
+                    if (filter === 'pending' && item.classList.contains('completed')) {
+                        item.style.display = 'none';
+                    } else if (filter === 'completed' && item.classList.contains('pending')) {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // --- Lógica para MARCAR TAREFA COMO CONCLUÍDA ---
+        function toggleTaskCompletion(event) {
+            const checkbox = event.target;
+            const taskItem = checkbox.closest('.task-item');
+            if (checkbox.checked) {
+                taskItem.classList.remove('pending');
+                taskItem.classList.add('completed');
+            } else {
+                taskItem.classList.remove('completed');
+                taskItem.classList.add('pending');
+            }
+        }
+
+        // --- Lógica para EXCLUIR TAREFA ---
+        function deleteTask(event) {
+            const taskItem = event.target.closest('.task-item');
+            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                taskItem.remove();
+            }
+        }
+
+        // --- Lógica para EDITAR TAREFA ---
+        function editTask(event) {
+            const taskItem = event.target.closest('.task-item');
+            editingTaskId = taskItem.dataset.id; // Armazena o ID da tarefa que será editada
+
+            // Pega os dados da tarefa a partir dos data-attributes
+            const title = taskItem.dataset.title || '';
+            const description = taskItem.dataset.description || '';
+            const date = taskItem.dataset.date || ''; // Formato YYYY-MM-DD
+            const priority = taskItem.dataset.priority || 'medium'; // Valor padrão
+
+            // Preenche o formulário com os dados da tarefa
+            taskTitleInput.value = title;
+            taskDescriptionInput.value = description;
+            deliveryDateInput.value = date;
+            prioritySelect.value = priority;
+
+            // Altera o título do formulário para indicar que é uma edição
+            newTaskFormSection.querySelector('h2').textContent = 'Editar Tarefa';
+
+            // Mostra o formulário de nova tarefa
+            hideAllSections();
+            newTaskFormSection.classList.remove('hidden');
+        }
+
+        // Adicionar listeners para as tarefas existentes (exemplos) ao carregar a página
+        document.querySelectorAll('.task-item input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', toggleTaskCompletion);
+        });
+
+        document.querySelectorAll('.task-item .delete-task-btn').forEach(button => {
+            button.addEventListener('click', deleteTask);
+        });
+
+        document.querySelectorAll('.task-item .edit-task-btn').forEach(button => {
+            button.addEventListener('click', editTask); // Adiciona listener para editar
+        });
+    </script>
+</body>
+</html>
