@@ -55,13 +55,15 @@
             justify-content: space-around;
             gap: 20px;
             margin: 30px 0;
+            flex-wrap: wrap;
         }
         .stat-card {
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: 30%;
+            width: 100%;
+            max-width: 200px;
         }
         .stat-card h4 { margin-top: 0; color: #22127e; }
         .stat-card p { font-size: 2.5em; font-weight: bold; color: #4324d5; margin: 0; }
@@ -92,6 +94,8 @@
             <nav>
                 <ul>
                     <li><a href="#" id="nav-my-tasks" class="active">Minhas Tarefas</a></li>
+                    <!-- NOVO: Aba de Calendário adicionada -->
+                    <li><a href="#" id="nav-calendar">Calendário</a></li>
                     <li><a href="#" id="nav-dashboard">Meu Desempenho</a></li>
                     <li><a href="#" id="nav-about">Sobre</a></li>
                     <li><a href="index.html" id="logout-btn" class="btn btn-sm">Sair</a></li>
@@ -125,26 +129,22 @@
 
         <section id="about-taskflex" class="about-section hidden"></section>
 
-        <section id="dashboard-section" class="hidden">
+        <section id="dashboard-section" class="hidden"></section>
+
+        <!-- NOVO: Secção do Calendário adicionada de volta -->
+        <section id="calendar-section" class="calendar-section hidden">
             <div class="container">
-                <h2>Meu Desempenho</h2>
-                <div class="stats-container">
-                    <div class="stat-card">
-                        <h4>Total de Tarefas</h4>
-                        <p id="stat-total">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Concluídas</h4>
-                        <p id="stat-completed">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Pendentes</h4>
-                        <p id="stat-pending">0</p>
-                    </div>
+                <h2>Calendário</h2>
+                <div class="calendar-header">
+                    <button id="prev-month-btn" class="btn secondary">&lt;</button>
+                    <h3 id="current-month-year"></h3>
+                    <button id="next-month-btn" class="btn secondary">&gt;</button>
                 </div>
-                <h4>Progresso Geral</h4>
-                <div class="progress-bar-container">
-                    <div id="progress-bar" class="progress-bar">0%</div>
+                <div class="calendar-grid-container">
+                    <div class="calendar-weekdays">
+                        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                    </div>
+                    <div id="calendar-days" class="calendar-days"></div>
                 </div>
             </div>
         </section>
@@ -161,7 +161,6 @@
         const API_URL = 'https://taskflex.onrender.com';
         let allTasks = [];
 
-        // --- Lógica de Autenticação e Carregamento Inicial ---
         document.addEventListener('DOMContentLoaded', () => {
             const userId = localStorage.getItem('userId');
             const username = localStorage.getItem('username');
@@ -175,14 +174,10 @@
             document.getElementById('logged-in-user').textContent = `Olá, ${username}!`;
             document.getElementById('logged-in-user').style.display = 'inline-block';
             
-            // Carregar o conteúdo das seções dinâmicas
             loadDynamicContent();
-            
             loadTasks(userId);
             showMotivationalQuote();
         });
-
-        // --- Lógica de Tarefas (API) ---
 
         async function loadTasks(userId) {
             try {
@@ -195,7 +190,6 @@
         }
 
         function renderUI() {
-            // Ordenar tarefas: pendentes primeiro, depois por prioridade
             const priorityMap = { 'high': 3, 'medium': 2, 'low': 1 };
             allTasks.sort((a, b) => {
                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
@@ -204,10 +198,11 @@
             
             const focusTaskId = localStorage.getItem('focusTaskId');
             const focusTask = focusTaskId ? allTasks.find(t => t.id == focusTaskId) : null;
-            
             const regularTasks = focusTask ? allTasks.filter(t => t.id != focusTaskId) : allTasks;
             
-            renderTaskList(regularTasks, document.getElementById('task-list'));
+            // Aplica o filtro ativo atualmente
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            applyFilter(activeFilter, regularTasks);
             
             const focusContainer = document.getElementById('focus-task-container');
             const focusList = document.getElementById('focus-task-list');
@@ -275,11 +270,7 @@
             const method = taskId ? 'PUT' : 'POST';
 
             try {
-                await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(taskData)
-                });
+                await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(taskData) });
                 await loadTasks(userId);
                 showSection(document.getElementById('my-tasks'));
             } catch (error) {
@@ -290,8 +281,12 @@
         async function deleteTask(taskId) {
             if (!confirm('Tem a certeza que deseja excluir esta tarefa?')) return;
             try {
+                // CORREÇÃO: Verifica se a tarefa a ser excluída é o foco
+                if (localStorage.getItem('focusTaskId') == taskId) {
+                    localStorage.removeItem('focusTaskId');
+                }
                 await fetch(`${API_URL}/api/tasks/${taskId}`, { method: 'DELETE' });
-                await loadTasks(localStorage.getItem('userId'));
+                await loadTasks(localStorage.getItem('userId')); // Recarrega tudo para atualizar a UI
             } catch (error) {
                 alert('Não foi possível excluir a tarefa.');
             }
@@ -309,18 +304,12 @@
 
         async function toggleTaskCompletion(taskId, isCompleted) {
              try {
-                await fetch(`${API_URL}/api/tasks/${taskId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ completed: isCompleted })
-                });
+                await fetch(`${API_URL}/api/tasks/${taskId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: isCompleted }) });
                 await loadTasks(localStorage.getItem('userId'));
             } catch (error) {
                 alert('Não foi possível atualizar o estado da tarefa.');
             }
         }
-
-        // --- Funções Surpresa e Extras ---
 
         function toggleFocus(taskId) {
             const currentFocus = localStorage.getItem('focusTaskId');
@@ -356,17 +345,28 @@
             const randomIndex = Math.floor(Math.random() * quotes.length);
             document.getElementById('quote-container').textContent = `"${quotes[randomIndex]}"`;
         }
+        
+        // CORREÇÃO: Função para aplicar filtros
+        function applyFilter(filter, tasks) {
+            let filteredTasks = tasks;
+            if (filter === 'pending') {
+                filteredTasks = tasks.filter(task => !task.completed);
+            } else if (filter === 'completed') {
+                filteredTasks = tasks.filter(task => task.completed);
+            }
+            renderTaskList(filteredTasks, document.getElementById('task-list'));
+        }
 
         // --- Lógica de Navegação e Conteúdo Dinâmico ---
         function showSection(sectionToShow) {
             [document.getElementById('my-tasks'), document.getElementById('about-taskflex'), 
-             document.getElementById('new-task-form-section'), document.getElementById('dashboard-section')]
-             .forEach(section => section.classList.add('hidden'));
+             document.getElementById('new-task-form-section'), document.getElementById('dashboard-section'),
+             document.getElementById('calendar-section') // Adicionado
+            ].forEach(section => section.classList.add('hidden'));
             sectionToShow.classList.remove('hidden');
         }
         
         function loadDynamicContent() {
-            // Carrega o formulário
             document.getElementById('new-task-form-section').innerHTML = `
                 <div class="container">
                     <h2 id="form-title">Nova Tarefa</h2>
@@ -380,7 +380,6 @@
                     </form>
                 </div>`;
             
-            // Carrega a seção "Sobre"
             document.getElementById('about-taskflex').innerHTML = `
                 <div class="container">
                     <h2>Sobre o TaskFlex</h2>
@@ -396,7 +395,7 @@
                     </ul>
                 </div>`;
 
-            // Adiciona os event listeners aos elementos recém-criados
+            // Adiciona os event listeners aos elementos recém-criados e existentes
             document.getElementById('task-form').addEventListener('submit', submitTaskForm);
             document.getElementById('btn-cancel-task').addEventListener('click', () => showSection(document.getElementById('my-tasks')));
             document.getElementById('nav-my-tasks').addEventListener('click', (e) => { e.preventDefault(); showSection(document.getElementById('my-tasks')); });
@@ -408,6 +407,49 @@
                 document.getElementById('form-title').textContent = 'Nova Tarefa';
                 showSection(document.getElementById('new-task-form-section'));
             });
+
+            // CORREÇÃO: Adiciona listeners para os botões de filtro
+            document.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    const focusTask = localStorage.getItem('focusTaskId') ? allTasks.find(t => t.id == localStorage.getItem('focusTaskId')) : null;
+                    const regularTasks = focusTask ? allTasks.filter(t => t.id != focusTask.id) : allTasks;
+                    applyFilter(this.dataset.filter, regularTasks);
+                });
+            });
+
+            // NOVO: Adiciona listeners para o calendário
+            let currentDate = new Date();
+            const currentMonthYearEl = document.getElementById('current-month-year');
+            const calendarDaysEl = document.getElementById('calendar-days');
+
+            function renderCalendar() {
+                calendarDaysEl.innerHTML = '';
+                const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                currentMonthYearEl.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+                const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                const daysInMonth = lastDayOfMonth.getDate();
+                const startDay = firstDayOfMonth.getDay();
+
+                for (let i = 0; i < startDay; i++) { calendarDaysEl.innerHTML += `<div class="calendar-day empty"></div>`; }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.classList.add('calendar-day');
+                    dayDiv.textContent = day;
+                    const today = new Date();
+                    if (currentDate.getFullYear() === today.getFullYear() && currentDate.getMonth() === today.getMonth() && day === today.getDate()) {
+                        dayDiv.classList.add('today');
+                    }
+                    calendarDaysEl.appendChild(dayDiv);
+                }
+            }
+            document.getElementById('nav-calendar').addEventListener('click', (e) => { e.preventDefault(); showSection(document.getElementById('calendar-section')); renderCalendar(); });
+            document.getElementById('prev-month-btn').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+            document.getElementById('next-month-btn').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
         }
     </script>
 </body>
